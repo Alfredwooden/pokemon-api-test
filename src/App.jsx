@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMachine } from '@xstate/react';
 import { pokemonMachine } from './state/pokemonMachine';
+import './App.css';
 
 export default function App() {
   const [state, send] = useMachine(pokemonMachine);
@@ -20,68 +21,77 @@ export default function App() {
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      <h1>Pokédex (XState Powered)</h1>
+    <div className="app">
+      <h1 className="app__title">Pokédex - State managed by XState</h1>
 
       {/* Global Search Bar */}
-      <form onSubmit={handleSearch}>
-        <input 
-          type="text" 
-          placeholder="Search by name or ID..." 
-          value={searchInput} 
+      <form className="search-form" onSubmit={handleSearch}>
+        <input
+          className="search-form__input"
+          type="text"
+          placeholder="Search by name or ID..."
+          value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
         />
-        <button type="submit">Search</button>
+        <button className="search-form__button" type="submit">Search</button>
       </form>
 
-      <hr />
+      <hr className="divider" />
 
       {/* 1. LOADING STATES */}
-      {state.matches('loadingList') && <p>Loading Pokémon list...</p>}
-      {state.matches('loadingDetail') && <p>Searching for Pokémon...</p>}
+      {state.matches('loadingList') && <p className="loading">Loading Pokémon list...</p>}
+      {state.matches('loadingDetail') && <p className="loading">Searching for Pokémon...</p>}
 
       {/* 2. FAILURE STATE */}
+      {/* TODO: Allow to search instead of having to come back */}
       {state.matches('failure') && (
-        <div style={{ color: 'red' }}>
-          <p>Error: {error}</p>
-          <button onClick={() => send({ type: 'RETRY' })}>🔄 Retry</button>
-          <button onClick={() => send({ type: 'BACK_TO_LIST' })}>Back to List</button>
+        <div className="error">
+          <p className="error__message">Error: {error}</p>
+          <button className="error__retry-button" onClick={() => send({ type: 'RETRY' })}>🔄 Retry</button>
+          <button className="error__back-button" onClick={() => send({ type: 'BACK_TO_LIST' })}>Back to List</button>
         </div>
       )}
 
       {/* 3. SUCCESS: LIST VIEW */}
       {state.matches('successList') && listData && (
-        <div>
-          <h3>All Pokémon</h3>
-          <ul>
+        <div className="pokemon-list">
+          <h3 className="pokemon-list__title">All Pokémon</h3>
+          <ul className="pokemon-list__items">
             {listData.results.map((p) => (
-              <li key={p.name} style={{ cursor: 'pointer', color: 'blue' }} onClick={() => send({ type: 'SEARCH', query: p.name })}>
+              <li
+                key={p.name}
+                className="pokemon-list__item"
+                onClick={() => send({ type: 'SEARCH', query: p.name })}
+              >
                 {p.name}
               </li>
             ))}
           </ul>
-          <button onClick={() => send({ type: 'PREV_PAGE' })} disabled={offset === 0}>Previous</button>
-          <span> Page {offset / 20 + 1} </span>
-          <button onClick={() => send({ type: 'NEXT_PAGE' })} disabled={!listData.next}>Next</button>
+          <div className="pagination">
+            <button className="pagination__button" onClick={() => send({ type: 'PREV_PAGE' })} disabled={offset === 0}>Previous</button>
+            <span className="pagination__info"> Page {offset / 20 + 1} </span>
+            <button className="pagination__button" onClick={() => send({ type: 'NEXT_PAGE' })} disabled={!listData.next}>Next</button>
+          </div>
         </div>
       )}
 
       {/* 4. SUCCESS: DETAIL VIEW */}
       {state.matches('successDetail') && selectedPokemon && (
-        <div>
-          <button onClick={() => send({ type: 'BACK_TO_LIST' })}>← Back to List</button>
-          <h2>{selectedPokemon.name.toUpperCase()} (#{selectedPokemon.id})</h2>
-          
-          <h4>Types:</h4>
-          <ul>
-            {selectedPokemon.types.map(t => <li key={t.type.name}>{t.type.name}</li>)}
+        <div className="pokemon-detail">
+          <button className="pokemon-detail__back-button" onClick={() => send({ type: 'BACK_TO_LIST' })}>← Back to List</button>
+          <h2 className="pokemon-detail__name">{selectedPokemon.name.toUpperCase()} (#{selectedPokemon.id})</h2>
+
+          <h4 className="pokemon-detail__section-title">Types:</h4>
+          <ul className="pokemon-detail__list">
+            {selectedPokemon.types.map(t => <li key={t.type.name} className="pokemon-detail__item">{t.type.name}</li>)}
           </ul>
 
-          <h4>Base Stats:</h4>
-          <ul>
+          <h4 className="pokemon-detail__section-title">Base Stats:</h4>
+          <ul className="pokemon-detail__list">
             {selectedPokemon.stats.map(s => (
-              <li key={s.stat.name}>
-                <strong>{s.stat.name}:</strong> {s.base_stat}
+              <li key={s.stat.name} className="pokemon-detail__item pokemon-detail__item--stat">
+                <span className="pokemon-detail__stat-name">{s.stat.name.replaceAll('-', ' ')}</span>
+                <span className="pokemon-detail__stat-value">{s.base_stat}</span>
               </li>
             ))}
           </ul>
