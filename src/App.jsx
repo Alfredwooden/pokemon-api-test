@@ -1,37 +1,23 @@
-import { useEffect, useState } from 'react';
 import { useMachine } from '@xstate/react';
 import { pokemonMachine } from './state/pokemonMachine';
 import './App.css';
 
 export default function App() {
   const [state, send] = useMachine(pokemonMachine);
-  const [searchInput, setSearchInput] = useState('');
   const { listData, selectedPokemon, error, offset } = state.context;
-
-  // Trigger initial fetch on load
-  useEffect(() => {
-    send({ type: 'FETCH_LIST' });
-  }, [send]);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchInput.trim()) {
-      send({ type: 'SEARCH', query: searchInput });
-    }
-  };
 
   return (
     <div className="app">
-      <h1 className="app__title">Pokédex - State managed by XState</h1>
+      <h1 className="app__title">Pokédex</h1>
 
       {/* Global Search Bar */}
-      <form className="search-form" onSubmit={handleSearch}>
+      <form className="search-form" onSubmit={(e) => e.preventDefault()}>
         <input
           className="search-form__input"
           type="text"
           placeholder="Search by name or ID..."
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
+          value={state.context.searchQuery}
+          onChange={(e) => send({ type: 'SEARCH', query: e.target.value })}
         />
         <button className="search-form__button" type="submit">Search</button>
       </form>
