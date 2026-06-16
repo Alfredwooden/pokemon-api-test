@@ -9,11 +9,24 @@ const fetchPokemonList = fromPromise(async ({ input }) => {
 });
 
 // Fetch details of a pokemon
+const normalizeSearchQuery = (query) => {
+  const trimmed = query.trim();
+  if (!trimmed) return "";
+  return trimmed.startsWith("#") ? trimmed.slice(1).trim() : trimmed;
+};
+
 const fetchPokemonDetail = fromPromise(async ({ input }) => {
-  const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${input.query.toLowerCase().trim()}`);
+  const query = normalizeSearchQuery(input.query).toLowerCase();
+  const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(query)}`);
   if (!response.ok) throw new Error("Pokémon not found");
   return response.json();
 });
+
+const searchTransition = {
+  guard: ({ event }) => !!normalizeSearchQuery(event.query),
+  target: "loadingDetail",
+  actions: assign({ searchQuery: ({ event }) => normalizeSearchQuery(event.query) }),
+};
 
 // State machine
 export const pokemonMachine = createMachine({
@@ -33,6 +46,9 @@ export const pokemonMachine = createMachine({
     loadingList: {
       // Clear selected pokemon when loading list
       entry: assign({ selectedPokemon: null }),
+      on: {
+        SEARCH: searchTransition,
+      },
       // Fetch list of pokemons
       invoke: {
         src: fetchPokemonList,
@@ -51,6 +67,9 @@ export const pokemonMachine = createMachine({
     loadingDetail: {
       // Clear error when loading detail
       entry: assign({ error: null }),
+      on: {
+        SEARCH: searchTransition,
+      },
       // Fetch details of a pokemon
       invoke: {
         src: fetchPokemonDetail,
@@ -77,11 +96,7 @@ export const pokemonMachine = createMachine({
           target: "loadingList",
           actions: assign({ offset: ({ context }) => Math.max(0, context.offset - 20) }),
         },
-        SEARCH: {
-          guard: ({ event }) => !!event.query?.trim(),
-          target: "loadingDetail",
-          actions: assign({ searchQuery: ({ event }) => event.query.trim() }),
-        },
+        SEARCH: searchTransition,
       },
     },
     // Successfully loaded details of a pokemon
@@ -93,17 +108,14 @@ export const pokemonMachine = createMachine({
           actions: assign({ searchQuery: "" }),
         },
         // Actions when search is clicked
-        SEARCH: {
-          guard: ({ event }) => !!event.query?.trim(),
-          target: "loadingDetail",
-          actions: assign({ searchQuery: ({ event }) => event.query.trim() }),
-        },
+        SEARCH: searchTransition,
       },
     },
     // Failed to load list of pokemons or details of a pokemon
     failure: {
       // Actions when retry is clicked
       on: {
+        SEARCH: searchTransition,
         RETRY: [
           {
             // Guard to check if search query is not empty

@@ -39,7 +39,6 @@ export default function App() {
       {state.matches('loadingDetail') && <p className="loading">Searching for Pokémon...</p>}
 
       {/* 2. FAILURE STATE */}
-      {/* TODO: Allow to search instead of having to come back */}
       {state.matches('failure') && (
         <div className="error">
           <p className="error__message">Error: {error}</p>
@@ -54,12 +53,14 @@ export default function App() {
           <h3 className="pokemon-list__title">All Pokémon</h3>
           <ul className="pokemon-list__items">
             {listData.results.map((p) => (
-              <li
-                key={p.name}
-                className="pokemon-list__item"
-                onClick={() => send({ type: 'SEARCH', query: p.name })}
-              >
-                {p.name}
+              <li key={p.name}>
+                <button
+                  type="button"
+                  className="pokemon-list__item"
+                  onClick={() => send({ type: 'SEARCH', query: p.name })}
+                >
+                  {p.name}
+                </button>
               </li>
             ))}
           </ul>
