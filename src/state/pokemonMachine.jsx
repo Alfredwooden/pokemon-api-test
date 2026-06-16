@@ -78,8 +78,9 @@ export const pokemonMachine = createMachine({
           actions: assign({ offset: ({ context }) => Math.max(0, context.offset - 20) }),
         },
         SEARCH: {
+          guard: ({ event }) => !!event.query?.trim(),
           target: "loadingDetail",
-          actions: assign({ searchQuery: ({ event }) => event.query }),
+          actions: assign({ searchQuery: ({ event }) => event.query.trim() }),
         },
       },
     },
@@ -93,8 +94,9 @@ export const pokemonMachine = createMachine({
         },
         // Actions when search is clicked
         SEARCH: {
+          guard: ({ event }) => !!event.query?.trim(),
           target: "loadingDetail",
-          actions: assign({ searchQuery: ({ event }) => event.query }),
+          actions: assign({ searchQuery: ({ event }) => event.query.trim() }),
         },
       },
     },

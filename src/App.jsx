@@ -1,23 +1,33 @@
+import { useState } from 'react';
 import { useMachine } from '@xstate/react';
 import { pokemonMachine } from './state/pokemonMachine';
 import './App.css';
 
 export default function App() {
   const [state, send] = useMachine(pokemonMachine);
+  const [searchInput, setSearchInput] = useState('');
   const { listData, selectedPokemon, error, offset } = state.context;
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const query = searchInput.trim();
+    if (query) {
+      send({ type: 'SEARCH', query });
+    }
+  };
 
   return (
     <div className="app">
       <h1 className="app__title">Pokédex</h1>
 
       {/* Global Search Bar */}
-      <form className="search-form" onSubmit={(e) => e.preventDefault()}>
+      <form className="search-form" onSubmit={handleSearch}>
         <input
           className="search-form__input"
           type="text"
           placeholder="Search by name or ID..."
-          value={state.context.searchQuery}
-          onChange={(e) => send({ type: 'SEARCH', query: e.target.value })}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
         />
         <button className="search-form__button" type="submit">Search</button>
       </form>
